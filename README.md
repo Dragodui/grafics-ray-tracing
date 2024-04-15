@@ -1,2 +1,1 @@
-# ray_tracer_template
-
+# Grafics labs ZUT
