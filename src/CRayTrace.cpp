@@ -59,23 +59,75 @@ bool CRayTrace::compPrimaryRayMatrix(const CCamera& cam, glm::mat3& m) {
 ///
 bool CRayTrace::rayTrace(const CScene& scene, CRay& ray, COutput& res) {
     CObject* obj;
-    float tmin = 99999.0f;
+    float t_min = 99999.0f;
     float EPS = 0.0001f;
     bool is_intersection = false;
     for (auto i : scene.objectList) {
         float t = i->intersect(ray);
-        if (t > EPS && t < tmin) {
-            tmin = t;
+        if (t > EPS && t < t_min) {
+            obj = i;
+            t_min = t;
             is_intersection = true;
         }
     }
-    if (is_intersection) {
-        res.col = {0,0.5,0};
+    if (!is_intersection) {
+        return false;
     }
-    else {
-        res.col = {0,0,0};
+
+    glm::vec3 p = ray.pos + t_min*ray.dir;
+
+    for (const CLight& light : scene.lightList) {
+        res.col = res.col + light.color * obj->matAmbient;
+        glm::vec3 n = obj->normal(p);
+
+        glm::vec3 lightDir = glm::normalize(light.pos - p);
+        CRay shadowRay;
+        shadowRay.pos = p;
+        shadowRay.dir = lightDir;
+        is_intersection = false;
+        for (auto i : scene.objectList) {
+            float t = i->intersect(shadowRay);
+            if (t > EPS && t < t_min) {
+                obj = i;
+                t_min = t;
+                is_intersection = true;
+            }
+            if (is_intersection) break;
+        }
+        if (is_intersection) {
+            continue;
+        }
+
+        if (obj->isTexture) {
+            glm::vec2 uv = obj->textureMapping(n);
+            glm::vec3 tex_col = CImage::getTexel(obj->texture, uv.x, uv.y);
+            res.col = res.col*tex_col;
+        }
+        glm::vec3 L = glm::normalize(light.pos-p);
+        float cos_angle = glm::dot(n,L);
+        if (cos_angle > 0.001f) {
+            res.col = res.col + light.color * obj->matDiffuse * cos_angle;
+            glm::vec3 V = -ray.dir;
+            glm::vec3 h = glm::normalize(L+V);
+
+            float cos_beta = glm::dot(n,h);
+
+            if (cos_beta > 0.001f) {
+                res.col = res.col + light.color * obj->matSpecular * pow(cos_beta, obj->matShininess);
+            }
+        }
+
     }
+    if(obj->reflectance > 0 and res.tree < 1 and res.energy > 0.01f){
+        res.tree++;
+        glm::vec3 n = obj->normal(p);
+        res.energy = res.energy * obj->reflectance;
+        CRay secondary_ray = reflectedRay(ray, n, p);
+        rayTrace(scene, secondary_ray, res);
+    }
+
     /// looks for the closest object along the ray path
+
     /// returns false if there are no intersection
 
     /// computes 3D position of the intersection point
@@ -101,7 +153,7 @@ bool CRayTrace::rayTrace(const CScene& scene, CRay& ray, COutput& res) {
         /// computes the secondary ray parameters (reflected ray)
 
         /// recursion
-        //   rayTrace(scene, secondary_ray, out);
+        //rayTrace(scene, ray, res);
 
 
     return true;
@@ -117,7 +169,12 @@ bool CRayTrace::rayTrace(const CScene& scene, CRay& ray, COutput& res) {
 ///
 CRay CRayTrace::reflectedRay(const CRay& ray, const glm::vec3& n, const glm::vec3& pos) {
     CRay reflected_ray;
-    
+
+    glm::vec3 v = ray.dir;
+    glm::vec3 r = v - (2 * glm::dot(v , n)) * n;
+    reflected_ray.dir = glm::normalize(r);
+    reflected_ray.pos = pos;
+
     return reflected_ray;
 }
 

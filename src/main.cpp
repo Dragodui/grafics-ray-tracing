@@ -43,7 +43,7 @@ int main (int argc, char * const argv[]) {
      PRINT_VEC3("Vector",dir);
 
      CImage image(scene.cam.width, scene.cam.height);
-
+     // zadanie 6
 //     int choose = 1;
 //    /// computes ray direction for sample pixel positions
 //    for (int j = 0; j < scene.cam.height; j++) {
@@ -81,38 +81,60 @@ int main (int argc, char * const argv[]) {
 //     cv::waitKey();
 
      // zadanie 8
-    ray.pos = glm::vec3(0,0,10);
-    ray.dir = glm::vec3(0.3,0.3,-1.0);
-
-    CSphere* kula = new CSphere({0, 0, 0}, 5);
-    float t = kula->intersect(ray);
-    std::cout << t << std::endl;
+//    ray.pos = glm::vec3(0,0,10);
+//    ray.dir = glm::vec3(0.3,0.3,-1.0);
+//
+//    CSphere* kula = new CSphere({0, 0, 0}, 5);
+//    float t = kula->intersect(ray);
+//    std::cout << t << std::endl;
 
     //zadanie 9
     ray.pos = scene.cam.eyep;
+//    for (int j = 0; j < scene.cam.height; j++) {
+//        for (int i = 0; i < scene.cam.width; i++) {
+//            float fx = (float)i + 0.5f;
+//            float fy = (float)j + 0.5f;
+//
+//            glm::vec3 f (fx,fy,1);
+//            float length = glm::length(ray_matrix * f);
+//            ray.dir = (ray_matrix * f) / length;
+//            results.col = {0,0,0};
+//            rt.rayTrace(scene, ray, results);
+//
+//            if (results.col.x > 1 || results.col.y > 1 || results.col.z > 1) {
+//                results.col = {1,1,1};
+//            }
+//            image.setPixel(i,j, results.col);
+//        }
+//    }
+//    image.save("zadanie9.png", false);
+//    cv::imshow("zadanie9", image.getImage());
+//    cv::waitKey();
+
+    //zadanie 10
+//    float t_triangle = scene.objectList[scene.objectList.size()-1]->intersect(ray);
+//    std::cout << t_triangle << std::endl;
+    /// creates raster image object
+    // CImage image(scene.cam.width, scene.cam.height);
+    //zadanie 12
     for (int j = 0; j < scene.cam.height; j++) {
         for (int i = 0; i < scene.cam.width; i++) {
             float fx = (float)i + 0.5f;
             float fy = (float)j + 0.5f;
+            results.col = {0,0,0};
+            results.energy = 1.0f;
+            results.tree = 0;
 
             glm::vec3 f (fx,fy,1);
             float length = glm::length(ray_matrix * f);
             ray.dir = (ray_matrix * f) / length;
-            results.col = {0,0,0};
             rt.rayTrace(scene, ray, results);
-
-            if (results.col.x > 1 || results.col.y > 1 || results.col.z > 1) {
-                results.col = {1,1,1};
-            }
             image.setPixel(i,j, results.col);
         }
     }
-    image.save("zadanie9.png", false);
-    cv::imshow("zadanie9", image.getImage());
+    image.save("zadanie12.png", false);
+    cv::imshow("zadanie12", image.getImage());
     cv::waitKey();
-    /// creates raster image object
-    // CImage image(scene.cam.width, scene.cam.height);
-
     /// main loop
 
             /// position of the image point
@@ -145,7 +167,6 @@ int main (int argc, char * const argv[]) {
 
     // cv::imshow("image", image.getImage());
     // cv::waitKey();
-    
     std::cout << std::endl << std::endl;
     return 0;
 }

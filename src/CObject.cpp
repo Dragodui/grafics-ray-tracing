@@ -43,7 +43,8 @@ float CSphere::intersect(const CRay& ray) {
 /// \return Normal vector parameters.
 ///
 glm::vec3 CSphere::normal(const glm::vec3& hit_pos) {
-    glm::vec3 n = {0,0,0};
+    glm::vec3 n;
+    n = glm::normalize(hit_pos-pos);
     
     return n;
 }
@@ -53,7 +54,10 @@ glm::vec3 CSphere::normal(const glm::vec3& hit_pos) {
 /// \return (u,v) texture coordinates in <0,1> range.
 glm::vec2 CSphere::textureMapping(const glm::vec3& normal_vec) {
     glm::vec2 uv = {0,0};
-
+    float theta = std::atan2(normal_vec.z, normal_vec.x);
+    float phi = std::acos(normal_vec.y);
+    uv.x = theta / (2.0f * M_PI) + 0.5f;
+    uv.y = phi / M_PI;
     return uv;
 }
 
@@ -67,18 +71,26 @@ glm::vec2 CSphere::textureMapping(const glm::vec3& normal_vec) {
 float CTriangle::intersect(const CRay& ray) {
     float t = -1;
 
+    glm::vec3 baryPosition = {};
+    glm::vec3 planeNormal = CTriangle::normal(v0);
+
+    if(glm::intersectRayTriangle(ray.pos, ray.dir, v0, v1, v2, baryPosition)){
+        glm::intersectRayPlane(ray.pos, ray.dir, v0, planeNormal, t);
+    }
+
+
+
     return t;
 }
 
-
-/// \fn normal(glm::vec3 hit_pos)
-/// \brief Surface normal vector at the intersection point.
-/// \param hit_pos Intersection point (not used for triangle).
-/// \return Normal vector parameters.
-///
 glm::vec3 CTriangle::normal(const glm::vec3& hit_pos) {
     glm::vec3 n;
-        
+
+    glm::vec3 u = v1 - v0;
+    glm::vec3 v = v2 - v0;
+
+    n = glm::normalize(glm::cross(u,v));
+
     return n;
 }
 

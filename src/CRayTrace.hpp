@@ -29,7 +29,7 @@ class CRayTrace {
 
 public:
     static bool compPrimaryRayMatrix(const CCamera& cam, glm::mat3& mat);
-    bool rayTrace(const CScene& scene, CRay &ray, COutput& res);
+    static bool rayTrace(const CScene& scene, CRay &ray, COutput& res);
     static CRay reflectedRay(const CRay& ray, const glm::vec3& n, const glm::vec3& pos);
 
 };
